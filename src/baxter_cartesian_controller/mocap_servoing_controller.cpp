@@ -22,7 +22,7 @@
 
 using namespace baxter_mocap_servoing;
 
-MocapServoingController::MocapServoingController(ros::NodeHandle& nh, std::string group_name, std::string arm_pose_topic, std::string target_pose_topic, std::string robot_config_topic, std::string arm_command_action, std::string abort_service, double kp, double ki, double kd) : nh_(nh)
+MocapServoingController::MocapServoingController(ros::NodeHandle& nh, std::string group_name, std::string arm_pose_topic, std::string target_pose_topic, std::string robot_config_topic, std::string arm_command_action, std::string arm_controller_state_topic, std::string abort_service, double kp, double ki, double kd) : nh_(nh)
 {
     // Set mode
     mode_ = EXTERNAL_POSE;
@@ -72,6 +72,7 @@ MocapServoingController::MocapServoingController(ros::NodeHandle& nh, std::strin
     arm_pose_sub_ = nh_.subscribe(arm_pose_topic, 1, &MocapServoingController::ArmPoseCB, this);
     target_pose_sub_ = nh_.subscribe(target_pose_topic, 1, &MocapServoingController::TargetPoseCB, this);
     robot_config_sub_ = nh_.subscribe(robot_config_topic, 1, &MocapServoingController::RobotStateCB, this);
+    arm_controller_state_pub_ = nh_.advertise<geometry_msgs::PoseStamped>(arm_controller_state_topic, 1, true);
     // Setup abort service
     abort_server_ = nh_.advertiseService(abort_service, &MocapServoingController::AbortCB, this);
     // Setup trajectory controller interface
@@ -99,7 +100,7 @@ MocapServoingController::MocapServoingController(ros::NodeHandle& nh, std::strin
     state_ = PAUSED;
 }
 
-MocapServoingController::MocapServoingController(ros::NodeHandle &nh, std::string group_name, std::string target_pose_topic, std::string robot_config_topic, std::string arm_command_action, std::string abort_service, double kp, double ki, double kd) : nh_(nh)
+MocapServoingController::MocapServoingController(ros::NodeHandle &nh, std::string group_name, std::string target_pose_topic, std::string robot_config_topic, std::string arm_command_action, std::string arm_controller_state_topic, std::string abort_service, double kp, double ki, double kd) : nh_(nh)
 {
     // Set mode
     mode_ = INTERNAL_POSE;
@@ -148,6 +149,7 @@ MocapServoingController::MocapServoingController(ros::NodeHandle &nh, std::strin
     // Setup topics
     target_pose_sub_ = nh_.subscribe(target_pose_topic, 1, &MocapServoingController::TargetPoseCB, this);
     robot_config_sub_ = nh_.subscribe(robot_config_topic, 1, &MocapServoingController::RobotStateCB, this);
+    arm_controller_state_pub_ = nh_.advertise<geometry_msgs::PoseStamped>(arm_controller_state_topic, 1, true);
     // Setup abort service
     abort_server_ = nh_.advertiseService(abort_service, &MocapServoingController::AbortCB, this);
     // Setup trajectory controller interface
@@ -228,6 +230,20 @@ void MocapServoingController::Loop()
         // Do the next step
         if (state_ == RUNNING)
         {
+            // Publish the current arm pose
+            Eigen::Vector3d current_arm_position = current_arm_pose_.translation();
+            Eigen::Quaterniond current_arm_orientation(current_arm_pose_.rotation());
+            geometry_msgs::PoseStamped current_arm_pose_stamped;
+            current_arm_pose_stamped.header.stamp = ros::Time::now();
+            current_arm_pose_stamped.header.frame_id = "/base";
+            current_arm_pose_stamped.pose.position.x = current_arm_position.x();
+            current_arm_pose_stamped.pose.position.y = current_arm_position.y();
+            current_arm_pose_stamped.pose.position.z = current_arm_position.z();
+            current_arm_pose_stamped.pose.orientation.x = current_arm_orientation.x();
+            current_arm_pose_stamped.pose.orientation.y = current_arm_orientation.y();
+            current_arm_pose_stamped.pose.orientation.z = current_arm_orientation.z();
+            current_arm_pose_stamped.pose.orientation.w = current_arm_orientation.w();
+            arm_controller_state_pub_.publish(current_arm_pose_stamped);
             // Compute the next step
             std::vector<double> target_config = ComputeNextStep(current_arm_pose_, current_target_pose_, current_arm_config_);
             // Command the robot

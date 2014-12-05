@@ -114,6 +114,8 @@ namespace baxter_mocap_servoing
         ros::Subscriber target_pose_sub_;
         ros::Subscriber robot_config_sub_;
 
+        ros::Publisher arm_controller_state_pub_;
+
         ros::ServiceServer abort_server_;
 
         std::unique_ptr<actionlib::SimpleActionClient<control_msgs::FollowJointTrajectoryAction>> arm_client_;
@@ -320,9 +322,9 @@ namespace baxter_mocap_servoing
 
     public:
 
-        MocapServoingController(ros::NodeHandle& nh, std::string group_name, std::string arm_pose_topic, std::string target_pose_topic, std::string robot_config_topic, std::string arm_command_action, std::string abort_service, double kp, double ki, double kd);
+        MocapServoingController(ros::NodeHandle& nh, std::string group_name, std::string arm_pose_topic, std::string target_pose_topic, std::string robot_config_topic, std::string arm_command_action, std::string arm_controller_state_topic, std::string abort_service, double kp, double ki, double kd);
 
-        MocapServoingController(ros::NodeHandle &nh, std::string group_name, std::string target_pose_topic, std::string robot_config_topic, std::string arm_command_action, std::string abort_service, double kp, double ki, double kd);
+        MocapServoingController(ros::NodeHandle &nh, std::string group_name, std::string target_pose_topic, std::string robot_config_topic, std::string arm_command_action, std::string arm_controller_state_topic, std::string abort_service, double kp, double ki, double kd);
 
         ~MocapServoingController() {}
 

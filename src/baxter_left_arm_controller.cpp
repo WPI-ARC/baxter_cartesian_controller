@@ -16,6 +16,7 @@ int main(int argc, char** argv)
     std::string target_pose_topic;
     std::string robot_config_topic;
     std::string arm_command_action;
+    std::string arm_controller_state;
     std::string abort_service;
     double kp = DEFAULT_KP;
     double ki = DEFAULT_KI;
@@ -24,6 +25,7 @@ int main(int argc, char** argv)
     nhp.param(std::string("target_pose_topic"), target_pose_topic, std::string("/left_arm_pose_controller/target"));
     nhp.param(std::string("robot_config_topic"), robot_config_topic, std::string("/robot/joint_states"));
     nhp.param(std::string("arm_command_action"), arm_command_action, std::string("/robot/limb/left/follow_joint_trajectory"));
+    nhp.param(std::string("arm_controller_state"), arm_controller_state, std::string("/left_arm_pose_controller/state"));
     nhp.param(std::string("abort_service"), abort_service, std::string("/left_arm_pose_controller/abort"));
     nhp.param(std::string("kp"), kp, DEFAULT_KP);
     nhp.param(std::string("ki"), ki, DEFAULT_KI);
@@ -31,14 +33,14 @@ int main(int argc, char** argv)
     if (arm_pose_topic == std::string(""))
     {
         ROS_INFO("Running in INTERNAL_POSE mode");
-        baxter_mocap_servoing::MocapServoingController controller(nh, std::string("left_arm"), target_pose_topic, robot_config_topic, arm_command_action, abort_service, kp, ki, kd);
+        baxter_mocap_servoing::MocapServoingController controller(nh, std::string("left_arm"), target_pose_topic, robot_config_topic, arm_command_action, arm_controller_state, abort_service, kp, ki, kd);
         ROS_INFO("...startup complete");
         controller.Loop();
     }
     else
     {
         ROS_INFO("Running in EXTERNAL_POSE mode");
-        baxter_mocap_servoing::MocapServoingController controller(nh, std::string("left_arm"), arm_pose_topic, target_pose_topic, robot_config_topic, arm_command_action, abort_service, kp, ki, kd);
+        baxter_mocap_servoing::MocapServoingController controller(nh, std::string("left_arm"), arm_pose_topic, target_pose_topic, robot_config_topic, arm_command_action, arm_controller_state, abort_service, kp, ki, kd);
         ROS_INFO("...startup complete");
         controller.Loop();
     }

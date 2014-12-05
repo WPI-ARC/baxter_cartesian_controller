@@ -1,0 +1,26 @@
+<launch>
+
+  <arg name="output" default="screen"/>
+
+  <arg name="kp" default="1.0" />
+  <arg name="kd" default="0.0" />
+  <arg name="ki" default="0.2" />
+
+  <!-- Load the parameters that MoveIt! needs -->
+  <include file="$(find baxter_moveit_config)/launch/planning_context.launch" />
+
+  <!-- Start the left arm controller -->
+  <node pkg="baxter_cartesian_controller" type="baxter_left_arm_controller_no_mocap" name="baxter_left_arm_controller" output="$(arg output)">
+    <param name="kp" type="double" value="$(arg kp)" />
+    <param name="kd" type="double" value="$(arg kd)" />
+    <param name="ki" type="double" value="$(arg ki)" />
+  </node>
+
+  <!-- Start the right arm controller -->
+  <node pkg="baxter_cartesian_controller" type="baxter_right_arm_controller_no_mocap" name="baxter_right_arm_controller" output="$(arg output)">
+    <param name="kp" type="double" value="$(arg kp)" />
+    <param name="kd" type="double" value="$(arg kd)" />
+    <param name="ki" type="double" value="$(arg ki)" />
+  </node>
+
+</launch>

@@ -227,23 +227,23 @@ void MocapServoingController::Loop()
     ros::Rate spin_rate(CONTROL_RATE);
     while (ros::ok())
     {
+        // Publish the current arm pose
+        Eigen::Vector3d current_arm_position = current_arm_pose_.translation();
+        Eigen::Quaterniond current_arm_orientation(current_arm_pose_.rotation());
+        geometry_msgs::PoseStamped current_arm_pose_stamped;
+        current_arm_pose_stamped.header.stamp = ros::Time::now();
+        current_arm_pose_stamped.header.frame_id = "/base";
+        current_arm_pose_stamped.pose.position.x = current_arm_position.x();
+        current_arm_pose_stamped.pose.position.y = current_arm_position.y();
+        current_arm_pose_stamped.pose.position.z = current_arm_position.z();
+        current_arm_pose_stamped.pose.orientation.x = current_arm_orientation.x();
+        current_arm_pose_stamped.pose.orientation.y = current_arm_orientation.y();
+        current_arm_pose_stamped.pose.orientation.z = current_arm_orientation.z();
+        current_arm_pose_stamped.pose.orientation.w = current_arm_orientation.w();
+        arm_controller_state_pub_.publish(current_arm_pose_stamped);
         // Do the next step
         if (state_ == RUNNING)
         {
-            // Publish the current arm pose
-            Eigen::Vector3d current_arm_position = current_arm_pose_.translation();
-            Eigen::Quaterniond current_arm_orientation(current_arm_pose_.rotation());
-            geometry_msgs::PoseStamped current_arm_pose_stamped;
-            current_arm_pose_stamped.header.stamp = ros::Time::now();
-            current_arm_pose_stamped.header.frame_id = "/base";
-            current_arm_pose_stamped.pose.position.x = current_arm_position.x();
-            current_arm_pose_stamped.pose.position.y = current_arm_position.y();
-            current_arm_pose_stamped.pose.position.z = current_arm_position.z();
-            current_arm_pose_stamped.pose.orientation.x = current_arm_orientation.x();
-            current_arm_pose_stamped.pose.orientation.y = current_arm_orientation.y();
-            current_arm_pose_stamped.pose.orientation.z = current_arm_orientation.z();
-            current_arm_pose_stamped.pose.orientation.w = current_arm_orientation.w();
-            arm_controller_state_pub_.publish(current_arm_pose_stamped);
             // Compute the next step
             std::vector<double> target_config = ComputeNextStep(current_arm_pose_, current_target_pose_, current_arm_config_);
             // Command the robot
